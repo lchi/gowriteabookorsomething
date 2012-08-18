@@ -1,5 +1,3 @@
-// +build example
-// Sample code for Go ncurses bindings
 package main
 
 // #include <curses.h>
@@ -8,7 +6,7 @@ import "C"
 
 type Window struct {
 	yPos, xPos int
-	text       []string
+  curNode *CharNode
 }
 
 var win *Window
