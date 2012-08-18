@@ -7,17 +7,17 @@ package main
 import "C"
 
 type Window struct {
-  yPos, xPos int
-  text []string
+	yPos, xPos int
+	text       []string
 }
 
 var win *Window
 
 func main() {
 	C.initscr()
-  C.curs_set(C.int(1))
+	C.curs_set(C.int(1))
 
-  win = new(Window)
+	win = new(Window)
 	defer C.endwin()
 
 	listen()
@@ -31,40 +31,46 @@ func listen() {
 
 forever:
 	for {
-		ch = int(C.getch())
+		ch = int(C.wgetch(C.stdscr))
 		switch ch {
 
 		// -- Exit --
 		case 4: // EOT (ctrl-d)
 			break forever
 
-    // -- Movement keys --
-    case int(C.KEY_UP):
-      if win.yPos > 0 {
-        win.yPos -= 1
-      }
+		// -- Movement keys --
+		case int(C.KEY_UP):
+			if win.yPos > 0 {
+				win.yPos -= 1
+			}
 		case int(C.KEY_DOWN):
-      win.yPos += 1
+			win.yPos += 1
 		case int(C.KEY_RIGHT):
-      win.xPos += 1
+			win.xPos += 1
 		case int(C.KEY_LEFT):
-      if win.xPos > 0 {
-        win.xPos -= 1
-      }
+			if win.xPos > 0 {
+				win.xPos -= 1
+			}
 
 		// -- Erase characters in a form --
-		case 330: // delete
-      C.delch()
+		case int(C.KEY_DC): // delete
+			C.mvdelch(C.int(win.yPos), C.int(win.xPos))
 		case int(C.KEY_BACKSPACE):
-      if win.xPos > 0 {
-        win.xPos -= 1
-        C.mvdelch(C.int(win.yPos), C.int(win.xPos))
-      }
+			if win.xPos > 0 {
+				win.xPos -= 1
+				C.mvdelch(C.int(win.yPos), C.int(win.xPos))
+			}
+
+		// -- Newline --
+		case int(C.KEY_ENTER):
+			win.yPos += 1
+			win.xPos = 0
+			C.mvaddch(C.int(win.yPos), C.int(win.xPos), C.chtype(50))
 
 		// -- Type text into a form --
 		default:
-      C.mvaddch(C.int(win.yPos), C.int(win.xPos), C.chtype(ch))
-      win.xPos += 1
+			C.mvaddch(C.int(win.yPos), C.int(win.xPos), C.chtype(ch))
+			win.xPos += 1
 		}
 
 		C.refresh()
