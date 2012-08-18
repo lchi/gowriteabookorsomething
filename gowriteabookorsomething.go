@@ -2,86 +2,71 @@
 // Sample code for Go ncurses bindings
 package main
 
+// #include <curses.h>
+// #cgo LDFLAGS: -lncurses
+import "C"
+
 import (
 	curses "github.com/jabb/gocurse/curses"
 )
 
 var screen *curses.Window
-var current int
+var yPos, xPos int
+var text []string
 
 func main() {
-	// Initscr() initializes the terminal in curses mode.
 	screen, _ = curses.Initscr()
-	// Endwin must be called when done.
+  curses.Curs_set(1)
+
 	defer curses.Endwin()
 
-	listenKeys()
+	listen()
 }
 
-func listenKeys() {
+func listen() {
 	var ch int
 
-	// Suppress unnecessary echoing while taking input from the user
 	curses.Noecho()
-	// Enables the reading of function keys like F1, F2, arrow keys etc
 	screen.Keypad(true)
 
-	// Since we start with the Form panel active, move cursor to the first field.
-	curses.DoUpdate()
-
-forloop:
+forever:
 	for {
 		ch = screen.Getch()
 		switch ch {
 
-    /*
-		// -- Move windows --
-		case KEY_UP:
-			if windows[current].starty > 0 {
-				windows[current].starty--
-				// Move window to new position.
-				panels[current].Move(windows[current].Pos())
-			}
-		case KEY_DOWN:
-			if windows[current].starty < *Rows-windows[current].height {
-				windows[current].starty++
-				panels[current].Move(windows[current].Pos())
-			}
-		case KEY_RIGHT:
-			if windows[current].startx < *Cols-windows[current].width {
-				windows[current].startx++
-				panels[current].Move(windows[current].Pos())
-			}
-		case KEY_LEFT:
-			if windows[current].startx > 0 {
-				windows[current].startx--
-				panels[current].Move(windows[current].Pos())
-			}
-    */
-
-		// -- Erase characters in a form --
-    /*
-		case 330: // delete
-			if current == 0 {
-				form.Drive(REQ_DEL_CHAR)
-			}
-		case KEY_BACKSPACE:
-			if form.Drive(REQ_PREV_CHAR) {
-				form.Drive(REQ_DEL_CHAR)
-			}
-    */
-
 		// -- Exit --
 		case 4: // EOT (ctrl-d)
-			break forloop
+			break forever
+
+    // -- Movement keys --
+		case curses.KEY_UP:
+      if yPos > 0 {
+        yPos -= 1
+      }
+		case curses.KEY_DOWN:
+      yPos += 1
+		case curses.KEY_RIGHT:
+      xPos += 1
+		case curses.KEY_LEFT:
+      if xPos > 0 {
+        xPos -= 1
+      }
+
+		// -- Erase characters in a form --
+		case 330: // delete
+      C.delch()
+		case curses.KEY_BACKSPACE:
+      if xPos > 0 {
+        xPos -= 1
+        C.mvdelch(C.int(yPos), C.int(xPos))
+      }
 
 		// -- Type text into a form --
 		default:
-			if current == 0 {
-				screen.Addch(0,0,int32(ch),0)
-			}
+      screen.Addch(xPos, yPos, int32(ch), 0)
+      xPos += 1
 		}
 
-		curses.DoUpdate()
+		screen.Refresh()
 	}
 }
