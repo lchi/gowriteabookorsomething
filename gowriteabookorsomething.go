@@ -6,19 +6,19 @@ package main
 // #cgo LDFLAGS: -lncurses
 import "C"
 
-import (
-	curses "github.com/jabb/gocurse/curses"
-)
+type Window struct {
+  yPos, xPos int
+  text []string
+}
 
-var screen *curses.Window
-var yPos, xPos int
-var text []string
+var win *Window
 
 func main() {
-	screen, _ = curses.Initscr()
-  curses.Curs_set(1)
+	C.initscr()
+  C.curs_set(C.int(1))
 
-	defer curses.Endwin()
+  win = new(Window)
+	defer C.endwin()
 
 	listen()
 }
@@ -26,12 +26,12 @@ func main() {
 func listen() {
 	var ch int
 
-	curses.Noecho()
-	screen.Keypad(true)
+	C.noecho()
+	C.keypad(C.stdscr, C.bool(true))
 
 forever:
 	for {
-		ch = screen.Getch()
+		ch = int(C.getch())
 		switch ch {
 
 		// -- Exit --
@@ -39,34 +39,34 @@ forever:
 			break forever
 
     // -- Movement keys --
-		case curses.KEY_UP:
-      if yPos > 0 {
-        yPos -= 1
+		case C.KEY_UP:
+      if win.yPos > 0 {
+        win.yPos -= 1
       }
-		case curses.KEY_DOWN:
-      yPos += 1
-		case curses.KEY_RIGHT:
-      xPos += 1
-		case curses.KEY_LEFT:
-      if xPos > 0 {
-        xPos -= 1
+		case C.KEY_DOWN:
+      win.yPos += 1
+		case C.KEY_RIGHT:
+      win.xPos += 1
+		case C.KEY_LEFT:
+      if win.xPos > 0 {
+        win.xPos -= 1
       }
 
 		// -- Erase characters in a form --
 		case 330: // delete
       C.delch()
-		case curses.KEY_BACKSPACE:
-      if xPos > 0 {
-        xPos -= 1
-        C.mvdelch(C.int(yPos), C.int(xPos))
+		case C.KEY_BACKSPACE:
+      if win.xPos > 0 {
+        win.xPos -= 1
+        C.mvdelch(C.int(win.yPos), C.int(win.xPos))
       }
 
 		// -- Type text into a form --
 		default:
-      screen.Addch(xPos, yPos, int32(ch), 0)
-      xPos += 1
+      C.mvaddch(C.int(win.yPos), C.int(win.xPos), C.chtype(ch))
+      win.xPos += 1
 		}
 
-		screen.Refresh()
+		C.refresh()
 	}
 }
