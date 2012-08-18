@@ -39,15 +39,15 @@ forever:
 			break forever
 
     // -- Movement keys --
-		case C.KEY_UP:
+    case int(C.KEY_UP):
       if win.yPos > 0 {
         win.yPos -= 1
       }
-		case C.KEY_DOWN:
+		case int(C.KEY_DOWN):
       win.yPos += 1
-		case C.KEY_RIGHT:
+		case int(C.KEY_RIGHT):
       win.xPos += 1
-		case C.KEY_LEFT:
+		case int(C.KEY_LEFT):
       if win.xPos > 0 {
         win.xPos -= 1
       }
@@ -55,7 +55,7 @@ forever:
 		// -- Erase characters in a form --
 		case 330: // delete
       C.delch()
-		case C.KEY_BACKSPACE:
+		case int(C.KEY_BACKSPACE):
       if win.xPos > 0 {
         win.xPos -= 1
         C.mvdelch(C.int(win.yPos), C.int(win.xPos))
