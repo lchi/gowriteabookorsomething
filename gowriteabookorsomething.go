@@ -62,10 +62,9 @@ forever:
 			}
 
 		// -- Newline --
-		case int(C.KEY_ENTER):
+		case 10:
 			win.yPos += 1
 			win.xPos = 0
-			C.mvaddch(C.int(win.yPos), C.int(win.xPos), C.chtype(50))
 
 		// -- Type text into a form --
 		default:
@@ -73,6 +72,7 @@ forever:
 			win.xPos += 1
 		}
 
+    C.move(C.int(win.yPos), C.int(win.xPos))
 		C.refresh()
 	}
 }
